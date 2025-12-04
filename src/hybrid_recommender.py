@@ -65,17 +65,11 @@ def build_popularity_model(ratings: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_content_model(movies: pd.DataFrame):
-    """
-    Build TF-IDF features for movie genres (and optionally more text).
-    Returns:
-    - tfidf_matrix: TF-IDF vectors for each movie
-    - movie_ids: aligned movieId array
-    - tfidf_vectorizer: fitted vectorizer (if needed later)
-    """
-    # Fill NaN genres with empty string
+    
+    
     movies["genres"] = movies["genres"].fillna("")
 
-    # You can extend this by adding overview, tags, etc.
+    
     corpus = movies["genres"]
 
     tfidf = TfidfVectorizer(token_pattern=r'[^|]+')  # split by '|'
@@ -93,21 +87,17 @@ def get_content_scores_for_user(
     tfidf_matrix,
     movie_ids: np.ndarray
 ) -> pd.Series:
-    """
-    Compute content-based scores for all movies for a given user.
-    Uses cosine similarity between liked movies and all others.
-    Returns a pandas Series: index=movieId, value=content_score (0–1).
-    """
-    # User's rated movies
+    
+   
     user_ratings = ratings[ratings["userId"] == user_id]
-    # Consider liked movies as those with rating >= 4
+    
     liked = user_ratings[user_ratings["rating"] >= 4.0]
 
     if liked.empty:
-        # No history → content-based cannot say much
+        
         return pd.Series(0.0, index=movie_ids)
 
-    # Indices of liked movies in the TF-IDF matrix
+    
     liked_movie_ids = liked["movieId"].values
     movie_id_to_index = {mid: idx for idx, mid in enumerate(movie_ids)}
 
@@ -116,11 +106,10 @@ def get_content_scores_for_user(
     if not liked_indices:
         return pd.Series(0.0, index=movie_ids)
 
-    # Compute similarity between liked movies and all movies
+   
     liked_tfidf = tfidf_matrix[liked_indices]
-    sim_matrix = cosine_similarity(liked_tfidf, tfidf_matrix)  # shape: (num_liked, num_movies)
-
-    # Aggregate similarity scores (e.g., mean over liked movies)
+    sim_matrix = cosine_similarity(liked_tfidf, tfidf_matrix)  
+   
     content_scores = sim_matrix.mean(axis=0)  # shape: (num_movies,)
 
     # Normalize to 0–1
@@ -133,13 +122,8 @@ def get_content_scores_for_user(
 
 
 def build_item_similarity_matrix(ratings: pd.DataFrame, min_ratings_per_movie: int = 10):
-    """
-    Build item-based collaborative filtering similarity matrix using cosine similarity.
-    Returns:
-    - item_similarity: DataFrame index=movieId, columns=movieId, values=similarity
-    - user_item_matrix: pivot table of users x movies
-    """
-    # Filter movies with very few ratings (noise reduction)
+    
+    
     movie_counts = ratings["movieId"].value_counts()
     valid_movies = movie_counts[movie_counts >= min_ratings_per_movie].index
 
@@ -171,11 +155,7 @@ def get_cf_scores_for_user(
     item_similarity: pd.DataFrame,
     user_item_matrix: pd.DataFrame
 ) -> pd.Series:
-    """
-    Compute collaborative filtering scores for a given user.
-    Uses item-based similarity and the user's existing ratings.
-    Returns pandas Series: index=movieId, value=cf_score (0–1).
-    """
+   
     if user_id not in user_item_matrix.index:
         # New user → no CF possible
         return pd.Series(0.0, index=item_similarity.index)
@@ -235,10 +215,7 @@ def hybrid_recommend(
     w_cb: float = 0.4,
     w_cf: float = 0.4
 ) -> pd.DataFrame:
-    """
-    Generate Top-N hybrid recommendations for a given user.
-    Returns a DataFrame with movieId, title, and component scores.
-    """
+   
 
     # 1) Popularity scores
     pop_series = popularity_df.set_index("movieId")["popularity_score_norm"]
@@ -302,8 +279,8 @@ if __name__ == "__main__":
     # Load data
     # --------------------------
     ratings, movies = load_data(
-    ratings_path=r"C:/Users/mukul/OneDrive/Desktop/movie_recommendation system/ml-32m/ratings.csv",
-    movies_path=r"C:/Users/mukul/OneDrive/Desktop/movie_recommendation system/ml-32m/movies.csv"
+    ratings_path=r"data/ratings.csv",
+    movies_path=r"data/movies.csv"
 
 
     )
